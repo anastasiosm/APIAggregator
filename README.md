@@ -13,6 +13,7 @@ The implementation follows Clean Architecture principles, Strategy Pattern, and 
 - Parallel data fetching (asynchronous execution)
 - Unified JSON response model
 - Easy extension with new providers via `ILocationDataProvider`
+- Filtering & sorting for providers implementing IFilterable eg call: GET /api/aggregation?category=Sports&sortBy=CreatedAt&descending=true
 
 ## TODO: Features
 - In-memory caching to reduce external calls
