@@ -2,21 +2,15 @@
 
 namespace APIAggregator.API.Features.Aggregation
 {
-
 	public class AggregationService : IAggregationService
 	{
 		private readonly IIpGeolocationClient _geoClient;
-		private readonly IWeatherApiClient _weatherClient;
-		private readonly IAirQualityApiClient _airQualityClient;
+		private readonly IEnumerable<ILocationDataProvider> _providers;
 
-		public AggregationService(
-			IIpGeolocationClient geoClient,
-			IWeatherApiClient weatherClient,
-			IAirQualityApiClient airQualityClient)
+		public AggregationService(IIpGeolocationClient geoClient, IEnumerable<ILocationDataProvider> providers)
 		{
 			_geoClient = geoClient;
-			_weatherClient = weatherClient;
-			_airQualityClient = airQualityClient;
+			_providers = providers;
 		}
 
 		public async Task<AggregatedItemDto> GetAggregatedData(string ip, CancellationToken cancellationToken)
@@ -26,11 +20,12 @@ namespace APIAggregator.API.Features.Aggregation
 			if (location == null)
 				throw new Exception("Could not determine location from IP.");
 
-			// 2. In parallel: fetch weather & air quality
-			var weatherTask = _weatherClient.GetWeatherAsync(location.Latitude, location.Longitude, cancellationToken);
-			var airQualityTask = _airQualityClient.GetAirQualityAsync(location.Latitude, location.Longitude, cancellationToken);
+			// 2. Call other APIs in parallel
+			var tasks = _providers.ToDictionary(
+				p => p.Name,
+				p => p.GetDataAsync(location.Latitude, location.Longitude, cancellationToken));
 
-			await Task.WhenAll(weatherTask, airQualityTask);
+			await Task.WhenAll(tasks.Values);
 
 			return new AggregatedItemDto
 			{
@@ -38,8 +33,7 @@ namespace APIAggregator.API.Features.Aggregation
 				Country = location.Country,
 				Latitude = location.Latitude,
 				Longitude = location.Longitude,
-				Weather = weatherTask.Result,
-				AirQuality = airQualityTask.Result
+				Data = tasks.ToDictionary(t => t.Key, t => t.Value.Result)
 			};
 		}
 	}

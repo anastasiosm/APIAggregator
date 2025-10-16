@@ -12,8 +12,8 @@ builder.Services.AddHttpClient();
 
 // Register external API clients here!
 builder.Services.AddScoped<IIpGeolocationClient, IpGeolocationClient>();
-builder.Services.AddScoped<IWeatherApiClient, WeatherApiClient>();
-builder.Services.AddScoped<IAirQualityApiClient, AirQualityApiClient>();
+builder.Services.AddTransient<ILocationDataProvider, WeatherApiClient>();
+builder.Services.AddTransient<ILocationDataProvider, AirQualityApiClient>();
 
 // Register aggregation service
 builder.Services.AddScoped<IAggregationService, AggregationService>();

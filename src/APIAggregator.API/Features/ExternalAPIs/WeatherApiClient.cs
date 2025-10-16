@@ -1,45 +1,64 @@
-﻿namespace APIAggregator.API.Features.ExternalAPIs
+﻿using System.Net.Http;
+
+namespace APIAggregator.API.Features.ExternalAPIs
 {
 	public class WeatherDto
 	{
 		public string Summary { get; set; } = "";
 		public float TemperatureC { get; set; }
-	}
+		public string Description { get; set; } = "";
+	}	
 
-	public interface IWeatherApiClient
-	{
-		Task<WeatherDto?> GetWeatherAsync(float latitude, float longitude, CancellationToken cancellationToken);
-	}
-
-	public class WeatherApiClient : IWeatherApiClient
+	public class WeatherApiClient : ILocationDataProvider
 	{
 		private readonly IHttpClientFactory _httpClientFactory;
 		private readonly IConfiguration _configuration;
 		private readonly string _apiKey;
 
+		public string Name => "Weather";
+
 		public WeatherApiClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
 		{
 			_httpClientFactory = httpClientFactory;
 			_configuration = configuration;
-			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"] ?? throw new Exception("OpenWeatherMap API key missing.");
+			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"] 
+				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
+		}
+
+		public async Task<object> GetDataAsync(float lat, float lon, CancellationToken ct)
+		{ 
+			var result = await GetWeatherAsync(lat, lon, ct); 
+			return result ?? new WeatherDto { Summary = "No data", TemperatureC = 0 };
 		}
 
 		public async Task<WeatherDto?> GetWeatherAsync(float latitude, float longitude, CancellationToken cancellationToken)
 		{
-			var client = _httpClientFactory.CreateClient();
 			var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_apiKey}&units=metric";
-			var resp = await client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
-			if (resp != null && resp.Weather is { Length: > 0 })
+			var client = _httpClientFactory.CreateClient();
+
+			try
 			{
-				return new WeatherDto
+				var resp = await client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
+				if (resp?.Weather is { Length: > 0 })
 				{
-					Summary = resp.Weather[0].Main,
-					TemperatureC = resp.Main.Temp
-				};
+					return new WeatherDto
+					{
+						Summary = resp.Weather[0].Main,
+						Description = resp.Weather[0].Description,
+						TemperatureC = resp.Main.Temp
+					};
+				}
 			}
+			catch (HttpRequestException ex)
+			{
+				// TODO: Log error (Serilog, ILogger, etc.)
+				Console.WriteLine($"[WeatherApiClient] Error fetching weather: {ex.Message}");
+			}
+
 			return null;
 		}
 
+		#region Helper Classes for JSON Deserialization
 		private class WeatherApiResponse
 		{
 			public WeatherInfo[] Weather { get; set; } = Array.Empty<WeatherInfo>();
@@ -56,5 +75,6 @@
 		{
 			public float Temp { get; set; }
 		}
+		#endregion
 	}
 }
