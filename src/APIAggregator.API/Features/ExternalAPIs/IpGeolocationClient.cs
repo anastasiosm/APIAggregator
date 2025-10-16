@@ -6,8 +6,8 @@ namespace APIAggregator.API.Features.ExternalAPIs
 	{
 		public string City { get; set; } = string.Empty;
 		public string Country { get; set; } = string.Empty;
-		public float Latitude { get; set; }
-		public float Longitude { get; set; }
+		public double Latitude { get; set; }
+		public double Longitude { get; set; }
 	}
 
 	public interface IIpGeolocationClient
@@ -69,8 +69,8 @@ namespace APIAggregator.API.Features.ExternalAPIs
 			public string? Region_Name { get; set; }
 			public string? Region_Code { get; set; }
 			public string? City { get; set; }
-			public float Latitude { get; set; }
-			public float Longitude { get; set; }
+			public double Latitude { get; set; }
+			public double Longitude { get; set; }
 		}
 	}
 }

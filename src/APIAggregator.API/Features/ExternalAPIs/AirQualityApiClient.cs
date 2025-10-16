@@ -3,8 +3,8 @@
 	public class AirQualityDto
 	{
 		public int AQI { get; set; }
-		public float PM25 { get; set; }
-		public float PM10 { get; set; }
+		public double PM25 { get; set; }
+		public double PM10 { get; set; }
 	}	
 
 	public class AirQualityApiClient : ILocationDataProvider
@@ -22,13 +22,13 @@
 				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
 		}
 
-		public async Task<object?> GetDataAsync(float lat, float lon, CancellationToken ct)
+		public async Task<object?> GetDataAsync(double lat, double lon, CancellationToken ct)
 		{
 			var result = await GetAirQualityAsync(lat, lon, ct);
 			return result;
 		}
 
-		public async Task<AirQualityDto?> GetAirQualityAsync(float lat, float lon, CancellationToken cancellationToken)
+		public async Task<AirQualityDto?> GetAirQualityAsync(double lat, double lon, CancellationToken cancellationToken)
 		{
 			var url = $"https://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={_apiKey}";
 			var client = _httpClientFactory.CreateClient();
@@ -77,8 +77,8 @@
 
 		private class ComponentsInfo
 		{
-			public float Pm25 { get; set; }
-			public float Pm10 { get; set; }
+			public double Pm25 { get; set; }
+			public double Pm10 { get; set; }
 		}
 		#endregion
 	}

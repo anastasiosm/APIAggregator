@@ -5,7 +5,7 @@ namespace APIAggregator.API.Features.ExternalAPIs
 	public class WeatherDto
 	{
 		public string Summary { get; set; } = "";
-		public float TemperatureC { get; set; }
+		public double TemperatureC { get; set; }
 		public string Description { get; set; } = "";
 	}	
 
@@ -25,13 +25,13 @@ namespace APIAggregator.API.Features.ExternalAPIs
 				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
 		}
 
-		public async Task<object> GetDataAsync(float lat, float lon, CancellationToken ct)
+		public async Task<object> GetDataAsync(double lat, double lon, CancellationToken ct)
 		{ 
 			var result = await GetWeatherAsync(lat, lon, ct); 
 			return result ?? new WeatherDto { Summary = "No data", TemperatureC = 0 };
 		}
 
-		public async Task<WeatherDto?> GetWeatherAsync(float latitude, float longitude, CancellationToken cancellationToken)
+		public async Task<WeatherDto?> GetWeatherAsync(double latitude, double longitude, CancellationToken cancellationToken)
 		{
 			var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_apiKey}&units=metric";
 			var client = _httpClientFactory.CreateClient();
@@ -73,7 +73,7 @@ namespace APIAggregator.API.Features.ExternalAPIs
 
 		private class MainInfo
 		{
-			public float Temp { get; set; }
+			public double Temp { get; set; }
 		}
 		#endregion
 	}
