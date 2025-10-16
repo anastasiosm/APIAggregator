@@ -17,15 +17,15 @@ namespace APIAggregator.API.Features.ExternalAPIs
 
 	public class IpGeolocationClient : IIpGeolocationClient
 	{
-		private readonly IHttpClientFactory _httpClientFactory;
+		private readonly HttpClient _client;
 		private readonly IConfiguration _configuration;
 		private readonly string _apiKey;
 
 		private const string BASE_URL = "https://api.ipstack.com/";
 
-		public IpGeolocationClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+		public IpGeolocationClient(HttpClient client, IConfiguration configuration)
 		{
-			_httpClientFactory = httpClientFactory;
+			_client = client;
 			_configuration = configuration;
 			_apiKey = _configuration["ExternalAPIs:IPStack:ApiKey"]
 				?? throw new InvalidOperationException("IPStack API key missing.");
@@ -33,12 +33,11 @@ namespace APIAggregator.API.Features.ExternalAPIs
 
 		public async Task<IpLocationDto?> GetLocationByIpAsync(string ip, CancellationToken cancellationToken)
 		{
-			var url = $"{BASE_URL}{ip}?access_key={_apiKey}";
-			var client = _httpClientFactory.CreateClient();
+			var url = $"{BASE_URL}{ip}?access_key={_apiKey}";			
 
 			try
 			{
-				var resp = await client.GetFromJsonAsync<IpApiResponse>(url, cancellationToken);
+				var resp = await _client.GetFromJsonAsync<IpApiResponse>(url, cancellationToken);
 				if (resp != null
 					&& !string.IsNullOrEmpty(resp.City)
 					&& !string.IsNullOrEmpty(resp.Country_Name)

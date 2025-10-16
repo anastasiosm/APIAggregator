@@ -9,14 +9,14 @@
 
 	public class AirQualityApiClient : ILocationDataProvider
 	{
-		private readonly IHttpClientFactory _httpClientFactory;
+		private readonly HttpClient _client;
 		private readonly IConfiguration _configuration;
 		private readonly string _apiKey;
 		public string Name => "AirQuality";
 
-		public AirQualityApiClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+		public AirQualityApiClient(HttpClient client, IConfiguration configuration)
 		{
-			_httpClientFactory = httpClientFactory;
+			_client = client;
 			_configuration = configuration;
 			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"] 
 				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
@@ -31,11 +31,10 @@
 		public async Task<AirQualityDto?> GetAirQualityAsync(double lat, double lon, CancellationToken cancellationToken)
 		{
 			var url = $"https://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={_apiKey}";
-			var client = _httpClientFactory.CreateClient();
 
 			try
 			{
-				var resp = await client.GetFromJsonAsync<AirQualityApiResponse>(url, cancellationToken);
+				var resp = await _client.GetFromJsonAsync<AirQualityApiResponse>(url, cancellationToken);
 
 				if (resp?.List is { Length: > 0 })
 				{

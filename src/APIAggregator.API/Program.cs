@@ -2,13 +2,17 @@ using APIAggregator.API.Features.Aggregation;
 using APIAggregator.API.Features.ExternalAPIs;
 using APIAggregator.API.Middleware;
 using Microsoft.OpenApi.Models;
+using APIAggregator.API.Infrastructure.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
-builder.Services.AddHttpClient();
+// Register HTTP clients with resilience policies
+builder.Services.AddResilientHttpClient<WeatherApiClient>("https://api.openweathermap.org/");
+builder.Services.AddResilientHttpClient<AirQualityApiClient>("https://api.openweathermap.org/");
+builder.Services.AddResilientHttpClient<IpGeolocationClient>("https://api.ipstack.com/");
 
 // Register external API clients here!
 builder.Services.AddScoped<IIpGeolocationClient, IpGeolocationClient>();

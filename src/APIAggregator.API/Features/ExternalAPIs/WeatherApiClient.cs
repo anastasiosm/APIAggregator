@@ -11,15 +11,15 @@ namespace APIAggregator.API.Features.ExternalAPIs
 
 	public class WeatherApiClient : ILocationDataProvider
 	{
-		private readonly IHttpClientFactory _httpClientFactory;
+		private readonly HttpClient _client;
 		private readonly IConfiguration _configuration;
 		private readonly string _apiKey;
 
 		public string Name => "Weather";
 
-		public WeatherApiClient(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+		public WeatherApiClient(HttpClient client, IConfiguration configuration)
 		{
-			_httpClientFactory = httpClientFactory;
+			_client = client;
 			_configuration = configuration;
 			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"] 
 				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
@@ -34,11 +34,10 @@ namespace APIAggregator.API.Features.ExternalAPIs
 		public async Task<WeatherDto?> GetWeatherAsync(double latitude, double longitude, CancellationToken cancellationToken)
 		{
 			var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_apiKey}&units=metric";
-			var client = _httpClientFactory.CreateClient();
 
 			try
 			{
-				var resp = await client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
+				var resp = await _client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
 				if (resp?.Weather is { Length: > 0 })
 				{
 					return new WeatherDto
