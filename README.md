@@ -15,11 +15,11 @@ The implementation follows Clean Architecture principles, Strategy Pattern, and 
 - Easy extension with new providers via `ILocationDataProvider`
 - Filtering & sorting for providers implementing IFilterable eg call: GET /api/aggregation?category=Sports&sortBy=CreatedAt&descending=true
 - Resilient HttpClient configuration with Polly policies (retry, timeout, circuit breaker)
+- Swagger UI for testing
 
 ## TODO: Features
 - In-memory caching to reduce external calls
 - API request statistics (total requests, average response time)
-- Swagger UI for testing
 - Optional JWT authentication
 - Optional background service for performance anomaly detection
 
