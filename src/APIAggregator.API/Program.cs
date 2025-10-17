@@ -6,6 +6,15 @@ using APIAggregator.API.Infrastructure.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Redis configuration
+var redisConnection = builder.Configuration["REDIS_CONNECTION"] ?? "localhost:6379";
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+	options.Configuration = redisConnection;
+	options.InstanceName = "APIAggregator_";
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 

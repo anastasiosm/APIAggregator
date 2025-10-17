@@ -1,6 +1,8 @@
 ﻿using APIAggregator.API.Extensions;
 using APIAggregator.API.Features.ExternalAPIs;
 using APIAggregator.API.Interfaces;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace APIAggregator.API.Features.Aggregation
 {
@@ -8,11 +10,16 @@ namespace APIAggregator.API.Features.Aggregation
 	{
 		private readonly IIpGeolocationClient _geoClient;
 		private readonly IEnumerable<ILocationDataProvider> _providers;
+		private readonly IDistributedCache _cache;
 
-		public AggregationService(IIpGeolocationClient geoClient, IEnumerable<ILocationDataProvider> providers)
+		public AggregationService(
+			IIpGeolocationClient geoClient,
+			IEnumerable<ILocationDataProvider> providers,
+			IDistributedCache cache)
 		{
 			_geoClient = geoClient;
 			_providers = providers;
+			_cache = cache;
 		}
 
 		public async Task<AggregatedItemDto> GetAggregatedData(
@@ -22,6 +29,14 @@ namespace APIAggregator.API.Features.Aggregation
 			bool descending = false,
 			CancellationToken cancellationToken = default)
 		{
+			var cacheKey = $"Aggregated:{ip}";
+			var cachedJson = await _cache.GetStringAsync(cacheKey, cancellationToken);
+			if (!string.IsNullOrEmpty(cachedJson))
+			{
+				var cachedResult = JsonSerializer.Deserialize<AggregatedItemDto>(cachedJson);
+				if (cachedResult != null) return cachedResult;
+			}
+
 			// 1. Get location from IP
 			var location = await _geoClient.GetLocationByIpAsync(ip, cancellationToken);
 			if (location == null)
@@ -58,6 +73,14 @@ namespace APIAggregator.API.Features.Aggregation
 						.ToList();
 				}
 			}
+
+			// 5. Cache the aggregated result
+			var serialized = JsonSerializer.Serialize(aggregated);
+			var cacheOptions = new DistributedCacheEntryOptions
+			{
+				AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+			};
+			await _cache.SetStringAsync(cacheKey, serialized, cacheOptions, cancellationToken);
 
 			return aggregated;
 		}

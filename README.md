@@ -16,9 +16,9 @@ The implementation follows Clean Architecture principles, Strategy Pattern, and 
 - Filtering & sorting for providers implementing IFilterable eg call: GET /api/aggregation?category=Sports&sortBy=CreatedAt&descending=true
 - Resilient HttpClient configuration with Polly policies (retry, timeout, circuit breaker)
 - Swagger UI for testing
+- In-memory caching to reduce external calls
 
 ## TODO: Features
-- In-memory caching to reduce external calls
 - API request statistics (total requests, average response time)
 - Optional JWT authentication
 - Optional background service for performance anomaly detection
