@@ -12,6 +12,7 @@
 		private readonly HttpClient _client;
 		private readonly IConfiguration _configuration;
 		private readonly string _apiKey;
+
 		public string Name => "AirQuality";
 
 		public AirQualityApiClient(HttpClient client, IConfiguration configuration)
@@ -22,10 +23,10 @@
 				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
 		}
 
-		public async Task<object?> GetDataAsync(double lat, double lon, CancellationToken ct)
+		public async Task<object> GetDataAsync(double lat, double lon, CancellationToken ct)
 		{
 			var result = await GetAirQualityAsync(lat, lon, ct);
-			return result;
+			return result ?? new AirQualityDto { AQI = 0, PM25 = 0, PM10 = 0 };
 		}
 
 		public async Task<AirQualityDto?> GetAirQualityAsync(double lat, double lon, CancellationToken cancellationToken)

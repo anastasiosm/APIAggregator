@@ -1,4 +1,4 @@
-using APIAggregator.API.Features.Aggregation;
+﻿using APIAggregator.API.Features.Aggregation;
 using APIAggregator.API.Features.ExternalAPIs;
 using APIAggregator.API.Middleware;
 using Microsoft.OpenApi.Models;
@@ -6,14 +6,20 @@ using APIAggregator.API.Infrastructure.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Redis configuration
-var redisConnection = builder.Configuration["REDIS_CONNECTION"] ?? "localhost:6379";
+var redisConnection = builder.Configuration.GetConnectionString("Redis")
+	?? throw new InvalidOperationException("Redis connection string is not configured.");
+
+// TODO: for debugging.. to be deleted.
+Console.WriteLine($"===== REDIS CONNECTION STRING: {redisConnection} =====");
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
 	options.Configuration = redisConnection;
 	options.InstanceName = "APIAggregator_";
 });
+
+// Added logging for Redis operations
+builder.Logging.AddFilter("Microsoft.Extensions.Caching", LogLevel.Debug);
 
 // Add services to the container.
 builder.Services.AddControllers();
