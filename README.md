@@ -366,16 +366,19 @@ Expected results:
 APIAggregator/
 ├── src/
 │   ├── APIAggregator.API/
+│   │   ├── Extensions/               # Helper extensions (filtering, sorting)
 │   │   ├── Features/
 │   │   │   ├── Aggregation/          # Main aggregation logic
-│   │   │   ├── ExternalAPIs/         # API client implementations
-│   │   │   └── Weather/              # Weather-specific DTOs
+│   │   │   └── ExternalAPIs/         # API client implementations
+│   │   ├── Infrastructure/           # Redis cache, HTTP configuration
 │   │   ├── Interfaces/               # Abstraction layer
-│   │   ├── Middleware/               # Error handling, logging
-│   │   ├── Extensions/               # Helper extensions
-│   │   └── Program.cs                # App configuration
-│   ├── docker-compose.yml            # Container orchestration
-│   └── appsettings.json              # Configuration
+│   │   ├── Middleware/               # Error handling
+│   │   ├── appsettings.json          # Production config
+│   │   ├── appsettings.Development.json  # Development config
+│   │   ├── Dockerfile
+│   │   └── Program.cs                # App configuration & DI
+│   ├── api-aggregator.sln
+│   └── docker-compose.yml            # Container orchestration
 └── README.md
 ```
 
