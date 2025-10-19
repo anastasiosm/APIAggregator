@@ -2,7 +2,7 @@
 
 ## Overview
 The APIAggregator is an ASP.NET Core Web API that consolidates data from multiple external APIs into a single endpoint.  
-The implementation follows Clean Architecture principles, Strategy Pattern, and Open/Closed Principle (OCP), allowing easy addition of new providers without modifying the aggregation logic.
+The implementation follows Clean Architecture and Vertical Slice Architecture principles, Strategy Pattern, and Open/Closed Principle (OCP), allowing easy addition of new providers without modifying the aggregation logic.
 
 ### Integrated APIs
 - **IPStack API**: Determines city/country based on IP geolocation
