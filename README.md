@@ -218,36 +218,7 @@ dotnet run --project APIAggregator.API
 
 ---
 
-### Option 3: Standalone (No Docker)
 
-**1. Install Redis locally:**
-- **Windows**: Download from [Redis for Windows](https://github.com/microsoftarchive/redis/releases)
-- **Linux/Mac**: `brew install redis` or `apt-get install redis-server`
-
-**2. Start Redis:**
-```bash
-# Windows
-redis-server
-
-# Linux/Mac
-redis-server /usr/local/etc/redis.conf
-```
-
-**3. Update `appsettings.json`:**
-```json
-{
-  "ConnectionStrings": {
-    "Redis": "localhost:6379"
-  }
-}
-```
-
-**4. Run the API:**
-```bash
-dotnet run --project APIAggregator.API
-```
-
----
 
 ## Docker Configuration
 
