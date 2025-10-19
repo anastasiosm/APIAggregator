@@ -25,15 +25,32 @@
 			.AddPolicyHandler(GetCircuitBreakerPolicy());
 		}
 
+		/// <summary>
+		/// Defines a retry policy that retries on transient HTTP errors and 429 responses. 
+		/// </summary>		
 		private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy() =>
 			HttpPolicyExtensions
 				.HandleTransientHttpError()
 				.OrResult(msg => (int)msg.StatusCode == 429)
 				.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
 
+		/// <summary>
+		/// Creates and returns an asynchronous timeout policy for HTTP requests.
+		/// </summary>
+		/// <remarks>The policy enforces a timeout of 10 seconds for each HTTP request. If a request exceeds this
+		/// duration,  the operation is canceled, and a timeout exception is thrown.</remarks>
+		/// <returns>An <see cref="IAsyncPolicy{HttpResponseMessage}"/> that applies a 10-second timeout to HTTP requests.</returns>
 		private static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy() =>
 			Policy.TimeoutAsync<HttpResponseMessage>(10);
 
+		/// <summary>
+		/// Creates and returns a circuit breaker policy for handling transient HTTP errors.
+		/// </summary>
+		/// <remarks>The policy triggers a circuit break after 3 consecutive transient HTTP errors and remains open
+		/// for 30 seconds.  While the circuit is open, all requests will fail immediately. After the open period, the circuit
+		/// transitions  to a half-open state, allowing a limited number of requests to test if the underlying issue has been
+		/// resolved.</remarks>
+		/// <returns>An asynchronous circuit breaker policy configured to handle transient HTTP errors.</returns>
 		private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy() =>
 			HttpPolicyExtensions
 				.HandleTransientHttpError()
