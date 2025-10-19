@@ -1,20 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
-
-namespace APIAggregator.API.Features.ExternalAPIs
+﻿namespace APIAggregator.API.Features.ExternalAPIs
 {
-	public class IpLocationDto
-	{
-		public string City { get; set; } = string.Empty;
-		public string Country { get; set; } = string.Empty;
-		public double Latitude { get; set; }
-		public double Longitude { get; set; }
-	}
-
-	public interface IIpGeolocationClient
-	{
-		Task<IpLocationDto?> GetLocationByIpAsync(string ip, CancellationToken cancellationToken);
-	}
-
+	/// <summary>
+	/// Provides functionality to retrieve geolocation information for a given IP address using the IPStack API.
+	/// </summary>
+	/// <remarks>This client communicates with the IPStack API to fetch geolocation data, such as city, country,
+	/// latitude, and longitude, for a specified IP address. An API key must be configured in the application settings
+	/// under the key <ExternalAPIs:IPStack:ApiKey>.</remarks>
 	public class IpGeolocationClient : IIpGeolocationClient
 	{
 		private readonly HttpClient _client;
@@ -33,7 +24,7 @@ namespace APIAggregator.API.Features.ExternalAPIs
 
 		public async Task<IpLocationDto?> GetLocationByIpAsync(string ip, CancellationToken cancellationToken)
 		{
-			var url = $"{BASE_URL}{ip}?access_key={_apiKey}";			
+			var url = $"{BASE_URL}{ip}?access_key={_apiKey}";
 
 			try
 			{
@@ -43,13 +34,12 @@ namespace APIAggregator.API.Features.ExternalAPIs
 					&& !string.IsNullOrEmpty(resp.Country_Name)
 					&& resp.Latitude != 0 && resp.Longitude != 0)
 				{
-					return new IpLocationDto
-					{
-						City = resp.City ?? "",
-						Country = resp.Country_Name ?? "",
-						Latitude = resp.Latitude,
-						Longitude = resp.Longitude
-					};
+					return new IpLocationDto(
+						resp.City ?? "",
+						resp.Country_Name ?? "",
+						resp.Latitude,
+						resp.Longitude
+					);
 				}
 			}
 			catch (HttpRequestException ex)
@@ -60,6 +50,13 @@ namespace APIAggregator.API.Features.ExternalAPIs
 			return null;
 		}
 
+		/// <summary>
+		/// Represents the response data from an IP geolocation API.
+		/// Is being used to deserialize the JSON response from the external API.
+		/// </summary>
+		/// <remarks>This class contains information about the geographical location of an IP address,  including the
+		/// country, region, city, and coordinates. All string properties are nullable  and may be null if the corresponding
+		/// data is unavailable.</remarks>
 		private class IpApiResponse
 		{
 			public string? Ip { get; set; }

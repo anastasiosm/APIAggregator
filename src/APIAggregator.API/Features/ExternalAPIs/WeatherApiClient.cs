@@ -2,13 +2,9 @@
 
 namespace APIAggregator.API.Features.ExternalAPIs
 {
-	public class WeatherDto
-	{
-		public string Summary { get; set; } = "";
-		public double TemperatureC { get; set; }
-		public string Description { get; set; } = "";
-	}	
-
+	/// <summary>
+	/// Client interface for fetching weather data from an external API.
+	/// </summary>
 	public class WeatherApiClient : ILocationDataProvider
 	{
 		private readonly HttpClient _client;
@@ -28,7 +24,7 @@ namespace APIAggregator.API.Features.ExternalAPIs
 		public async Task<object> GetDataAsync(double lat, double lon, CancellationToken ct)
 		{ 
 			var result = await GetWeatherAsync(lat, lon, ct); 
-			return result ?? new WeatherDto { Summary = "No data", TemperatureC = 0 };
+			return result ?? new WeatherDto(Summary: "No data", TemperatureC: 0, Description: "No data available");
 		}
 
 		public async Task<WeatherDto?> GetWeatherAsync(double latitude, double longitude, CancellationToken cancellationToken)
@@ -40,12 +36,11 @@ namespace APIAggregator.API.Features.ExternalAPIs
 				var resp = await _client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
 				if (resp?.Weather is { Length: > 0 })
 				{
-					return new WeatherDto
-					{
-						Summary = resp.Weather[0].Main,
-						Description = resp.Weather[0].Description,
-						TemperatureC = resp.Main.Temp
-					};
+					return new WeatherDto(					
+						Summary: resp.Weather[0].Main,
+						Description: resp.Weather[0].Description,
+						TemperatureC: resp.Main.Temp
+					);
 				}
 			}
 			catch (HttpRequestException ex)
@@ -58,6 +53,13 @@ namespace APIAggregator.API.Features.ExternalAPIs
 		}
 
 		#region Helper Classes for JSON Deserialization
+
+		/// <summary>
+		/// Represents the response from a weather API.
+		/// Is being used to deserialize the JSON response from the external API.
+		/// </summary>
+		/// <remarks>This class is designed to facilitate JSON deserialization of weather API responses.  It includes
+		/// information about current weather conditions and key atmospheric metrics.</remarks>
 		private class WeatherApiResponse
 		{
 			public WeatherInfo[] Weather { get; set; } = Array.Empty<WeatherInfo>();
