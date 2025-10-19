@@ -1,6 +1,7 @@
 ﻿using APIAggregator.API.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 
 namespace APIAggregator.API.Features.Weather
 {
@@ -90,18 +91,25 @@ namespace APIAggregator.API.Features.Weather
 		/// information about current weather conditions and key atmospheric metrics.</remarks>
 		internal class WeatherApiResponse
 		{
+			[JsonPropertyName("weather")]
 			public WeatherInfo[] Weather { get; set; } = Array.Empty<WeatherInfo>();
+			
+			[JsonPropertyName("main")]
 			public MainInfo Main { get; set; } = new();
 		}
 
 		internal class WeatherInfo
 		{
+			[JsonPropertyName("main")]
 			public string Main { get; set; } = "";
+			
+			[JsonPropertyName("description")]
 			public string Description { get; set; } = "";
 		}
 
 		internal class MainInfo
 		{
+			[JsonPropertyName("temp")]
 			public double Temp { get; set; }
 		}
 		#endregion

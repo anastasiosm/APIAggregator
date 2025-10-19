@@ -1,6 +1,7 @@
 ﻿using APIAggregator.API.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 
 namespace APIAggregator.API.Features.AirQuality
 {
@@ -110,7 +111,10 @@ namespace APIAggregator.API.Features.AirQuality
 
 		internal class ComponentsInfo
 		{
+			[JsonPropertyName("pm2_5")]
 			public double Pm25 { get; set; }
+			
+			[JsonPropertyName("pm10")]
 			public double Pm10 { get; set; }
 		}
 		#endregion

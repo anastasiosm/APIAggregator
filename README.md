@@ -19,6 +19,7 @@ The implementation follows Clean Architecture and Vertical Slice Architecture pr
 - ✅ Docker Compose for production-like deployment
 - ✅ Swagger UI for API testing and documentation
 - ✅ Error handling middleware for consistent error responses
+- ✅ Added sample unit tests
 
 ## TODO: Features
 - API request statistics (total requests, average response time)

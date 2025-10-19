@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 using System.Text.Json;
 
 /// <summary>
@@ -40,7 +41,8 @@ public class RedisCacheHelper
 			};
 
 			var json = JsonSerializer.Serialize(value);
-			await _cache.SetStringAsync(key, json, options);
+			var bytes = Encoding.UTF8.GetBytes(json);
+			await _cache.SetAsync(key, bytes, options);
 			return true;
 		}
 		catch (Exception ex)
@@ -64,10 +66,12 @@ public class RedisCacheHelper
 	{
 		try
 		{
-			var json = await _cache.GetStringAsync(key);
-			return string.IsNullOrEmpty(json)
-				? default
-				: JsonSerializer.Deserialize<T>(json);
+			var bytes = await _cache.GetAsync(key);
+			if (bytes == null || bytes.Length == 0)
+				return default;
+
+			var json = Encoding.UTF8.GetString(bytes);
+			return JsonSerializer.Deserialize<T>(json);
 		}
 		catch (Exception ex)
 		{

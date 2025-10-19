@@ -19,4 +19,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
+  <!--FOR UNIT TESTS-->
+  <ItemGroup>
+    <InternalsVisibleTo Include="APIAggregator.API.Tests" />
+  </ItemGroup>
+
 </Project>
