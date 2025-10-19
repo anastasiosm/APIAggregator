@@ -1,5 +1,6 @@
 ﻿using APIAggregator.API.Extensions;
-using APIAggregator.API.Features.ExternalAPIs;
+using APIAggregator.API.Features.IpGeolocation;
+using APIAggregator.API.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
@@ -72,14 +73,13 @@ namespace APIAggregator.API.Features.Aggregation
 				task => (object?)task.Value.Result // Task completed. So, calling .Result is not blocking!
 			);
 
-			var aggregated = new AggregatedItemDto
-			{
-				City = location.City,
-				Country = location.Country,
-				Latitude = location.Latitude,
-				Longitude = location.Longitude,
-				Data = results
-			};
+			var aggregated = new AggregatedItemDto(
+				City: location.City,
+				Country: location.Country,
+				Latitude: location.Latitude,
+				Longitude: location.Longitude,
+				Data: results
+			);
 
 			// 5. Apply filtering & sorting for providers implementing IFilterable
 			aggregated.ApplyFilteringAndSorting(category);

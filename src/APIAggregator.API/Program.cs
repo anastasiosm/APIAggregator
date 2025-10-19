@@ -1,8 +1,11 @@
 ﻿using APIAggregator.API.Features.Aggregation;
-using APIAggregator.API.Features.ExternalAPIs;
 using APIAggregator.API.Middleware;
 using Microsoft.OpenApi.Models;
 using APIAggregator.API.Infrastructure.Http;
+using APIAggregator.API.Features.IpGeolocation;
+using APIAggregator.API.Features.Weather;
+using APIAggregator.API.Features.AirQuality;
+using APIAggregator.API.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

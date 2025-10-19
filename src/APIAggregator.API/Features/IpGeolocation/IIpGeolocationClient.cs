@@ -1,4 +1,4 @@
-namespace APIAggregator.API.Features.ExternalAPIs
+namespace APIAggregator.API.Features.IpGeolocation
 {
 	/// <summary>
 	/// Client interface for fetching IP geolocation data from an external API.

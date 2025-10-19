@@ -1,4 +1,4 @@
-﻿namespace APIAggregator.API.Features.ExternalAPIs
+﻿namespace APIAggregator.API.Features.AirQuality
 {
 	/// <summary>
 	/// Represents air quality data, including the Air Quality Index (AQI) and particulate matter (PM) concentrations.

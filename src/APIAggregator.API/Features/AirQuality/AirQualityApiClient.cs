@@ -1,4 +1,6 @@
-﻿namespace APIAggregator.API.Features.ExternalAPIs
+﻿using APIAggregator.API.Interfaces;
+
+namespace APIAggregator.API.Features.AirQuality
 {
 	/// <summary>
 	/// Provides functionality to retrieve air quality data for a specified geographic location using the OpenWeatherMap

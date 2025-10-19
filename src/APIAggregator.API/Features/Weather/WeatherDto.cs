@@ -1,4 +1,4 @@
-﻿namespace APIAggregator.API.Features.ExternalAPIs
+﻿namespace APIAggregator.API.Features.Weather
 {
 	/// <summary>
 	/// DTO object that represents weather data, including a summary, temperature, and description.

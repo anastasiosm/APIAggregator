@@ -369,7 +369,9 @@ APIAggregator/
 │   │   ├── Extensions/               # Helper extensions (filtering, sorting)
 │   │   ├── Features/
 │   │   │   ├── Aggregation/          # Main aggregation logic
-│   │   │   └── ExternalAPIs/         # API client implementations
+│   │   │   ├── AirQuality/           # Air Quality API client implementation
+│   │   │   ├── IpGeolocation/        # IP Geolocation API client implementation
+│   │   │   └── Weather/              # Weather API client implementation
 │   │   ├── Infrastructure/           # Redis cache, HTTP configuration
 │   │   ├── Interfaces/               # Abstraction layer
 │   │   ├── Middleware/               # Error handling
@@ -479,19 +481,3 @@ builder.Services.AddScoped<ILocationDataProvider, MyNewProvider>();
 ```
 
 3. The aggregation service automatically discovers and calls it!
-
----
-
-## License
-MIT License - feel free to use and modify
-
-## Support
-For issues or questions, please open a GitHub issue or contact the maintainers.
-
----
-
-## Additional Resources
-- [ASP.NET Core Documentation](https://docs.microsoft.com/aspnet/core)
-- [StackExchange.Redis Documentation](https://stackexchange.github.io/StackExchange.Redis/)
-- [Docker Documentation](https://docs.docker.com/)
-- [Polly Documentation](https://github.com/App-vNext/Polly)

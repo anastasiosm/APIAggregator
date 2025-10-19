@@ -1,4 +1,4 @@
-﻿namespace APIAggregator.API.Features.ExternalAPIs
+﻿namespace APIAggregator.API.Features.IpGeolocation
 {
 	/// <summary>
 	/// Provides functionality to retrieve geolocation information for a given IP address using the IPStack API.

@@ -1,4 +1,4 @@
-namespace APIAggregator.API.Features.ExternalAPIs
+namespace APIAggregator.API.Features.IpGeolocation
 {
 	/// <summary>
 	/// DTO object that represents the geographical location associated with an IP address.

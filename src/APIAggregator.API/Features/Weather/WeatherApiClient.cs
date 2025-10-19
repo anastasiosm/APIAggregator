@@ -1,6 +1,6 @@
-﻿using System.Net.Http;
+﻿using APIAggregator.API.Interfaces;
 
-namespace APIAggregator.API.Features.ExternalAPIs
+namespace APIAggregator.API.Features.Weather
 {
 	/// <summary>
 	/// Client interface for fetching weather data from an external API.
@@ -17,13 +17,13 @@ namespace APIAggregator.API.Features.ExternalAPIs
 		{
 			_client = client;
 			_configuration = configuration;
-			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"] 
+			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"]
 				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
 		}
 
 		public async Task<object> GetDataAsync(double lat, double lon, CancellationToken ct)
-		{ 
-			var result = await GetWeatherAsync(lat, lon, ct); 
+		{
+			var result = await GetWeatherAsync(lat, lon, ct);
 			return result ?? new WeatherDto(Summary: "No data", TemperatureC: 0, Description: "No data available");
 		}
 
@@ -36,7 +36,7 @@ namespace APIAggregator.API.Features.ExternalAPIs
 				var resp = await _client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
 				if (resp?.Weather is { Length: > 0 })
 				{
-					return new WeatherDto(					
+					return new WeatherDto(
 						Summary: resp.Weather[0].Main,
 						Description: resp.Weather[0].Description,
 						TemperatureC: resp.Main.Temp

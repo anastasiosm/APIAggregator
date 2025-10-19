@@ -1,4 +1,4 @@
-﻿namespace APIAggregator.API.Features.ExternalAPIs
+﻿namespace APIAggregator.API.Interfaces
 {
 	/// <summary>
 	/// Defines a contract for retrieving location-based data.
