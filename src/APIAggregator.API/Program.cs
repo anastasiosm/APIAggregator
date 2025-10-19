@@ -6,6 +6,7 @@ using APIAggregator.API.Features.IpGeolocation;
 using APIAggregator.API.Features.Weather;
 using APIAggregator.API.Features.AirQuality;
 using APIAggregator.API.Interfaces;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,13 +28,34 @@ builder.Logging.AddFilter("Microsoft.Extensions.Caching", LogLevel.Debug);
 // Add services to the container.
 builder.Services.AddControllers();
 
+builder.Services.AddOptions<WeatherApiOptions>()
+	.Configure(options =>
+	{
+		options.ApiKey = builder.Configuration["ExternalAPIs:OpenWeatherMap:ApiKey"]
+			?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
+		options.BaseUrl = builder.Configuration["ExternalAPIs:OpenWeatherMap:BaseUrl"]
+			?? "https://api.openweathermap.org/data/2.5/";
+	})
+	.ValidateOnStart(); // Validates immediately on startup
+
+builder.Services.AddOptions<AirQualityApiOptions>()
+	.Configure(options =>
+	{
+		options.ApiKey = builder.Configuration["ExternalAPIs:OpenWeatherMap:ApiKey"]
+			?? throw new InvalidOperationException("OpenWeatherMap API key missing for Air Quality.");
+		options.BaseUrl = builder.Configuration["ExternalAPIs:OpenWeatherMap:BaseUrl"]
+			?? "https://api.openweathermap.org/data/2.5/";
+	})
+	.ValidateOnStart(); // Validates immediately on startup
+
 // Register HTTP clients with resilience policies
 builder.Services.AddResilientHttpClient<WeatherApiClient>("https://api.openweathermap.org/");
 builder.Services.AddResilientHttpClient<AirQualityApiClient>("https://api.openweathermap.org/");
 builder.Services.AddResilientHttpClient<IpGeolocationClient>("https://api.ipstack.com/");
 
-// Register external API clients here!
-builder.Services.AddScoped<IIpGeolocationClient, IpGeolocationClient>();
+// Map interfaces to implementations
+builder.Services.AddScoped<IIpGeolocationClient>(sp => sp.GetRequiredService<IpGeolocationClient>());
+// Register ALL ILocationDataProvider implementations for IEnumerable injection
 builder.Services.AddTransient<ILocationDataProvider, WeatherApiClient>();
 builder.Services.AddTransient<ILocationDataProvider, AirQualityApiClient>();
 

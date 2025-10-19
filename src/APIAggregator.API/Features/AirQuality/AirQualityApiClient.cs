@@ -1,4 +1,6 @@
 ﻿using APIAggregator.API.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace APIAggregator.API.Features.AirQuality
 {
@@ -6,23 +8,26 @@ namespace APIAggregator.API.Features.AirQuality
 	/// Provides functionality to retrieve air quality data for a specified geographic location using the OpenWeatherMap
 	/// Air Pollution API.
 	/// </summary>
-	/// <remarks>This client fetches air quality data, including AQI (Air Quality Index), PM2.5, and PM10 levels,
-	/// for a given latitude and longitude. The client requires an API key for the OpenWeatherMap service, which must be
-	/// configured in the application settings under the key "ExternalAPIs:OpenWeatherMap:ApiKey".</remarks>
 	public class AirQualityApiClient : ILocationDataProvider
 	{
 		private readonly HttpClient _client;
-		private readonly IConfiguration _configuration;
-		private readonly string _apiKey;
+		private readonly AirQualityApiOptions _options;
+		private readonly ILogger<AirQualityApiClient> _logger;
 
 		public string Name => "AirQuality";
 
-		public AirQualityApiClient(HttpClient client, IConfiguration configuration)
+		// Use IOptions<> instead of IConfiguration
+		public AirQualityApiClient(
+			HttpClient client, 
+			IOptions<AirQualityApiOptions> options,
+			ILogger<AirQualityApiClient> logger)
 		{
-			_client = client;
-			_configuration = configuration;
-			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"] 
-				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
+			_client = client ?? throw new ArgumentNullException(nameof(client));
+			_options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+			if (string.IsNullOrWhiteSpace(_options.ApiKey))
+				throw new InvalidOperationException("OpenWeatherMap API key missing.");
 		}
 
 		public async Task<object> GetDataAsync(double lat, double lon, CancellationToken ct)
@@ -33,31 +38,51 @@ namespace APIAggregator.API.Features.AirQuality
 
 		public async Task<AirQualityDto?> GetAirQualityAsync(double lat, double lon, CancellationToken cancellationToken)
 		{
-			var url = $"https://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={_apiKey}";
+			var url = BuildAirQualityUrl(lat, lon);
 
 			try
 			{
 				var resp = await _client.GetFromJsonAsync<AirQualityApiResponse>(url, cancellationToken);
-
-				if (resp?.List is { Length: > 0 })
-				{
-					var main = resp.List[0].Main;
-					var components = resp.List[0].Components;
-					return new AirQualityDto(					
-						AQI: main.Aqi,
-						PM25: components.Pm25,
-						PM10: components.Pm10
-					);
-				}
+				return MapToAirQualityDto(resp);
 			}
 			catch (HttpRequestException ex)
 			{
-				Console.WriteLine($"[AirQualityApiClient] Error fetching air quality: {ex.Message}");
+				_logger.LogError(ex, "Error fetching air quality data for coordinates: Lat={Latitude}, Lon={Longitude}", lat, lon);
+				return null;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Unexpected error fetching air quality data for coordinates: Lat={Latitude}, Lon={Longitude}", lat, lon);
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Builds the air quality API URL with the provided coordinates.
+		/// </summary>
+		internal virtual string BuildAirQualityUrl(double latitude, double longitude)
+		{
+			return $"{_options.BaseUrl}air_pollution?lat={latitude}&lon={longitude}&appid={_options.ApiKey}";
+		}
+
+		/// <summary>
+		/// Maps the API response to an AirQualityDto object.
+		/// </summary>
+		internal static AirQualityDto? MapToAirQualityDto(AirQualityApiResponse? response)
+		{
+			if (response?.List is { Length: > 0 })
+			{
+				var main = response.List[0].Main;
+				var components = response.List[0].Components;
+				return new AirQualityDto(					
+					AQI: main.Aqi,
+					PM25: components.Pm25,
+					PM10: components.Pm10
+				);
 			}
 
 			return null;
 		}
-
 
 		#region Helper Classes for JSON Deserialization
 
@@ -67,23 +92,23 @@ namespace APIAggregator.API.Features.AirQuality
 		/// </summary>
 		/// <remarks>This class is used for deserializing JSON responses from the air quality API.  The <see
 		/// cref="List"/> property contains the data records returned by the API.</remarks>
-		private class AirQualityApiResponse
+		internal class AirQualityApiResponse
 		{
 			public AirQualityRecord[] List { get; set; } = Array.Empty<AirQualityRecord>();
 		}
 
-		private class AirQualityRecord
+		internal class AirQualityRecord
 		{
 			public MainInfo Main { get; set; } = new();
 			public ComponentsInfo Components { get; set; } = new();
 		}
 
-		private class MainInfo
+		internal class MainInfo
 		{
 			public int Aqi { get; set; }
 		}
 
-		private class ComponentsInfo
+		internal class ComponentsInfo
 		{
 			public double Pm25 { get; set; }
 			public double Pm10 { get; set; }

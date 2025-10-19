@@ -1,4 +1,6 @@
 ﻿using APIAggregator.API.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace APIAggregator.API.Features.Weather
 {
@@ -8,17 +10,22 @@ namespace APIAggregator.API.Features.Weather
 	public class WeatherApiClient : ILocationDataProvider
 	{
 		private readonly HttpClient _client;
-		private readonly IConfiguration _configuration;
-		private readonly string _apiKey;
+		private readonly WeatherApiOptions _options;
+		private readonly ILogger<WeatherApiClient> _logger;
 
 		public string Name => "Weather";
 
-		public WeatherApiClient(HttpClient client, IConfiguration configuration)
+		public WeatherApiClient(
+			HttpClient client,
+			IOptions<WeatherApiOptions> options,
+			ILogger<WeatherApiClient> logger)
 		{
-			_client = client;
-			_configuration = configuration;
-			_apiKey = _configuration["ExternalAPIs:OpenWeatherMap:ApiKey"]
-				?? throw new InvalidOperationException("OpenWeatherMap API key missing.");
+			_client = client ?? throw new ArgumentNullException(nameof(client));
+			_options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+			if (string.IsNullOrWhiteSpace(_options.ApiKey))
+				throw new InvalidOperationException("OpenWeatherMap API key missing.");
 		}
 
 		public async Task<object> GetDataAsync(double lat, double lon, CancellationToken ct)
@@ -29,24 +36,45 @@ namespace APIAggregator.API.Features.Weather
 
 		public async Task<WeatherDto?> GetWeatherAsync(double latitude, double longitude, CancellationToken cancellationToken)
 		{
-			var url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={_apiKey}&units=metric";
+			var url = BuildWeatherUrl(latitude, longitude);
 
 			try
 			{
 				var resp = await _client.GetFromJsonAsync<WeatherApiResponse>(url, cancellationToken);
-				if (resp?.Weather is { Length: > 0 })
-				{
-					return new WeatherDto(
-						Summary: resp.Weather[0].Main,
-						Description: resp.Weather[0].Description,
-						TemperatureC: resp.Main.Temp
-					);
-				}
+				return MapToWeatherDto(resp);
 			}
 			catch (HttpRequestException ex)
 			{
-				// TODO: Log error (Serilog, ILogger, etc.)
-				Console.WriteLine($"[WeatherApiClient] Error fetching weather: {ex.Message}");
+				_logger.LogError(ex, "Error fetching weather data for coordinates: Lat={Latitude}, Lon={Longitude}", latitude, longitude);
+				return null;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Unexpected error fetching weather data for coordinates: Lat={Latitude}, Lon={Longitude}", latitude, longitude);
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Builds the weather API URL with the provided coordinates.
+		/// </summary>
+		internal virtual string BuildWeatherUrl(double latitude, double longitude)
+		{
+			return $"{_options.BaseUrl}weather?lat={latitude}&lon={longitude}&appid={_options.ApiKey}&units=metric";
+		}
+
+		/// <summary>
+		/// Maps the API response to a WeatherDto object.
+		/// </summary>
+		internal static WeatherDto? MapToWeatherDto(WeatherApiResponse? response)
+		{
+			if (response?.Weather is { Length: > 0 })
+			{
+				return new WeatherDto(
+					Summary: response.Weather[0].Main,
+					Description: response.Weather[0].Description,
+					TemperatureC: response.Main.Temp
+				);
 			}
 
 			return null;
@@ -60,19 +88,19 @@ namespace APIAggregator.API.Features.Weather
 		/// </summary>
 		/// <remarks>This class is designed to facilitate JSON deserialization of weather API responses.  It includes
 		/// information about current weather conditions and key atmospheric metrics.</remarks>
-		private class WeatherApiResponse
+		internal class WeatherApiResponse
 		{
 			public WeatherInfo[] Weather { get; set; } = Array.Empty<WeatherInfo>();
 			public MainInfo Main { get; set; } = new();
 		}
 
-		private class WeatherInfo
+		internal class WeatherInfo
 		{
 			public string Main { get; set; } = "";
 			public string Description { get; set; } = "";
 		}
 
-		private class MainInfo
+		internal class MainInfo
 		{
 			public double Temp { get; set; }
 		}
