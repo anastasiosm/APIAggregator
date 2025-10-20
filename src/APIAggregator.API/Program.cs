@@ -7,6 +7,7 @@ using APIAggregator.API.Features.Weather;
 using APIAggregator.API.Features.AirQuality;
 using APIAggregator.API.Interfaces;
 using Microsoft.Extensions.Options;
+using APIAggregator.API.Features.Statistics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +59,8 @@ builder.Services.AddScoped<IIpGeolocationClient>(sp => sp.GetRequiredService<IpG
 // Register ALL ILocationDataProvider implementations for IEnumerable injection
 builder.Services.AddTransient<ILocationDataProvider, WeatherApiClient>();
 builder.Services.AddTransient<ILocationDataProvider, AirQualityApiClient>();
+
+builder.Services.AddTransient<IStatisticsService, StatisticsService>();
 
 // Register aggregation service
 builder.Services.AddScoped<IAggregationService, AggregationService>();
