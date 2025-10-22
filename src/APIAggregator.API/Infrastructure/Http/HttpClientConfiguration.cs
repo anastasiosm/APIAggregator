@@ -1,18 +1,22 @@
 ﻿namespace APIAggregator.API.Infrastructure.Http
 {
+	using APIAggregator.API.Features.Statistics;
 	using Microsoft.Extensions.DependencyInjection;
 	using Polly;
 	using Polly.Extensions.Http;
 	using System.Net.Http.Headers;
 
 	/// <summary>
+	/// HTTP SETUP
 	/// Provides centralized configuration for resilient <see cref="HttpClient"/> instances.
 	/// Registers common policies (retry, timeout, circuit breaker) using Polly and 
 	/// allows consistent setup of external API clients through dependency injection.
 	/// </summary>
 	public static class HttpClientConfiguration
 	{
-		public static void AddResilientHttpClient<TClient>(this IServiceCollection services, string baseUrl)
+		public static void AddResilientHttpClient<TClient>(
+			this IServiceCollection services,
+			string baseUrl)
 			where TClient : class
 		{
 			services.AddHttpClient<TClient>(client =>
@@ -20,6 +24,30 @@
 				client.BaseAddress = new Uri(baseUrl);
 				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 			})
+			.AddPolicyHandler(GetRetryPolicy())
+			.AddPolicyHandler(GetTimeoutPolicy())
+			.AddPolicyHandler(GetCircuitBreakerPolicy());
+		}
+
+		// resilient client with statistics tracking
+		public static void AddResilientHttpClientWithStats<TClient>(
+			this IServiceCollection services,
+			string baseUrl,
+			string apiName)
+			where TClient : class
+		{
+			services.AddHttpClient<TClient>(client =>
+			{
+				client.BaseAddress = new Uri(baseUrl);
+				client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+			})
+			// ⭐ ADD STATISTICS HANDLER FIRST (outermost layer)
+			.AddHttpMessageHandler(sp =>
+			{
+				var statsService = sp.GetRequiredService<IStatisticsService>();
+				return new StatisticsTrackingHandler(statsService, apiName);
+			})
+			// Then add resilience policies
 			.AddPolicyHandler(GetRetryPolicy())
 			.AddPolicyHandler(GetTimeoutPolicy())
 			.AddPolicyHandler(GetCircuitBreakerPolicy());

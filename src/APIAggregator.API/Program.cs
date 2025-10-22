@@ -49,10 +49,10 @@ builder.Services.AddOptions<AirQualityApiOptions>()
 	})
 	.ValidateOnStart(); // Validates immediately on startup
 
-// Register HTTP clients with resilience policies
-builder.Services.AddResilientHttpClient<WeatherApiClient>("https://api.openweathermap.org/");
-builder.Services.AddResilientHttpClient<AirQualityApiClient>("https://api.openweathermap.org/");
-builder.Services.AddResilientHttpClient<IpGeolocationClient>("https://api.ipstack.com/");
+// Register HTTP clients with resilience policies with STATISTICS TRACKING
+builder.Services.AddResilientHttpClientWithStats<WeatherApiClient>("https://api.openweathermap.org/", "Weather");
+builder.Services.AddResilientHttpClientWithStats<AirQualityApiClient>("https://api.openweathermap.org/", "AirQuality");
+builder.Services.AddResilientHttpClientWithStats<IpGeolocationClient>("https://api.ipstack.com/", "IpStack");
 
 // Map interfaces to implementations
 builder.Services.AddScoped<IIpGeolocationClient>(sp => sp.GetRequiredService<IpGeolocationClient>());
@@ -60,6 +60,7 @@ builder.Services.AddScoped<IIpGeolocationClient>(sp => sp.GetRequiredService<IpG
 builder.Services.AddTransient<ILocationDataProvider, WeatherApiClient>();
 builder.Services.AddTransient<ILocationDataProvider, AirQualityApiClient>();
 
+// STATISTICS TRACKING
 builder.Services.AddTransient<IStatisticsService, StatisticsService>();
 
 // Register aggregation service

@@ -60,46 +60,7 @@ namespace APIAggregator.API.Features.Statistics
 
 	public record PerformanceBucketsDto(int Fast,int Average,int Slow);
 
-	public interface IStatisticsService
-	{
-		Task<StatisticsDto> GetStatisticsAsync(CancellationToken cancellationToken = default);
-	}
-
-	public class StatisticsService : IStatisticsService
-	{
-		public StatisticsService()
-		{
-		}
-
-		public Task<StatisticsDto> GetStatisticsAsync(CancellationToken cancellationToken = default)
-		{
-			// TEST DATA - TEMPORARY
-			var stats = new StatisticsDto(new List<ApiStatisticsDto>
-			{
-				new ApiStatisticsDto(
-					"IPStack",
-					150,
-					245.5,
-					new PerformanceBucketsDto(30, 80, 40)
-				),
-				new ApiStatisticsDto(
-					"Weather",
-					150,
-					180.2,
-					new PerformanceBucketsDto(50, 70, 30)
-				),
-				new ApiStatisticsDto(
-					"AirQuality",
-					120,
-					90.5,
-					new PerformanceBucketsDto(75, 35, 10)
-				)
-			});
-
-
-			return Task.FromResult(stats);
-		}
-	}
+	
 
 	[ApiController]
 	[Route("api/[controller]")]
@@ -121,7 +82,7 @@ namespace APIAggregator.API.Features.Statistics
 			CancellationToken cancellationToken = default)
 		{
 			_logger.LogInformation("Processing statistics request");
-			var stats = await _statisticsService.GetStatisticsAsync(cancellationToken);
+			var stats = await _statisticsService.GetStatistics(cancellationToken);
 			return Ok(stats);
 		}
 	}	
