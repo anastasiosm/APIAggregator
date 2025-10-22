@@ -16,36 +16,82 @@ public class StatisticsService : IStatisticsService
 		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 
-	// TODO: make it async
-	public Task<StatisticsDto> GetStatistics(CancellationToken cancellationToken = default)
+	
+	public async Task<StatisticsDto> GetStatistics(CancellationToken cancellationToken = default)
 	{
-		// TEST DATA - TEMPORARY
-		var stats = new StatisticsDto(new List<ApiStatisticsDto>
+		//// TEST DATA - TEMPORARY
+		//var stats = new StatisticsDto(new List<ApiStatisticsDto>
+		//	{
+		//		new ApiStatisticsDto(
+		//			"IPStack",
+		//			150,
+		//			245.5,
+		//			new PerformanceBucketsDto(30, 80, 40)
+		//		),
+		//		new ApiStatisticsDto(
+		//			"Weather",
+		//			150,
+		//			180.2,
+		//			new PerformanceBucketsDto(50, 70, 30)
+		//		),
+		//		new ApiStatisticsDto(
+		//			"AirQuality",
+		//			120,
+		//			90.5,
+		//			new PerformanceBucketsDto(75, 35, 10)
+		//		)
+		//	});
+
+		/*CURRENTLY
+		 * {
+  "statistics": [
+    {
+      "apiName": "IpStack",
+      "totalRequests": 1,
+      "averageResponseTime": 918.1214,
+      "performanceBuckets": {
+        "fast": 0,
+        "average": 0,
+        "slow": 1
+      }
+    }
+  ]
+}
+		 */
+
+		var groupedMetrics = _metrics
+			.GroupBy(m => m.ApiName)
+			.Select(g =>
 			{
-				new ApiStatisticsDto(
-					"IPStack",
-					150,
-					245.5,
-					new PerformanceBucketsDto(30, 80, 40)
-				),
-				new ApiStatisticsDto(
-					"Weather",
-					150,
-					180.2,
-					new PerformanceBucketsDto(50, 70, 30)
-				),
-				new ApiStatisticsDto(
-					"AirQuality",
-					120,
-					90.5,
-					new PerformanceBucketsDto(75, 35, 10)
-				)
-			});
+				var totalRequests = g.Count();
+				var averageResponseTime = g.Average(m => m.DurationMs);
+				var fastCount = g.Count(m => m.DurationMs < 200);
+				var averageCount = g.Count(m => m.DurationMs >= 200 && m.DurationMs <= 500);
+				var slowCount = g.Count(m => m.DurationMs > 500);
 
+				return new ApiStatisticsDto(
+					ApiName: g.Key,
+					TotalRequests: totalRequests,
+					AverageResponseTime: averageResponseTime,
+					PerformanceBuckets: new PerformanceBucketsDto(
+						Fast: fastCount,
+						Average: averageCount,
+						Slow: slowCount
+					)
+				);
+			})
+			.ToList();
 
-		return Task.FromResult(stats);
+		var stats = new StatisticsDto(Statistics: groupedMetrics);
+
+		return await Task.FromResult(stats);
 	}
-		
+
+	/// <summary>
+	/// is called from Handler to record request duration.
+	/// </summary>
+	/// <param name="apiName"></param>
+	/// <param name="totalMilliseconds"></param>
 	public void RecordRequest(string apiName, double totalMilliseconds)
 	{
 		_logger.LogInformation(

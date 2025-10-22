@@ -54,14 +54,13 @@ builder.Services.AddResilientHttpClientWithStats<WeatherApiClient>("https://api.
 builder.Services.AddResilientHttpClientWithStats<AirQualityApiClient>("https://api.openweathermap.org/", "AirQuality");
 builder.Services.AddResilientHttpClientWithStats<IpGeolocationClient>("https://api.ipstack.com/", "IpStack");
 
-// Map interfaces to implementations
+// Map interfaces to implementations - factory pattern
 builder.Services.AddScoped<IIpGeolocationClient>(sp => sp.GetRequiredService<IpGeolocationClient>());
-// Register ALL ILocationDataProvider implementations for IEnumerable injection
-builder.Services.AddTransient<ILocationDataProvider, WeatherApiClient>();
-builder.Services.AddTransient<ILocationDataProvider, AirQualityApiClient>();
+builder.Services.AddTransient<ILocationDataProvider>(sp => sp.GetRequiredService<WeatherApiClient>());
+builder.Services.AddTransient<ILocationDataProvider>(sp => sp.GetRequiredService<AirQualityApiClient>());
 
-// STATISTICS TRACKING
-builder.Services.AddTransient<IStatisticsService, StatisticsService>();
+// STATISTICS TRACKING : singleton service to keep metrics in memory
+builder.Services.AddSingleton<IStatisticsService, StatisticsService>();
 
 // Register aggregation service
 builder.Services.AddScoped<IAggregationService, AggregationService>();
