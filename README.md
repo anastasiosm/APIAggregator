@@ -19,10 +19,10 @@ The implementation follows Clean Architecture and Vertical Slice Architecture pr
 - ✅ Docker Compose for production-like deployment
 - ✅ Swagger UI for API testing and documentation
 - ✅ Error handling middleware for consistent error responses
-- ✅ Added sample unit tests
+- ✅ Added sample unit tests - TODO: to be updated!
+- ✅ API request statistics (total requests, average response time)
 
 ## TODO: Features
-- API request statistics (total requests, average response time)
 - Optional JWT authentication
 - Optional background service for performance anomaly detection
 
@@ -65,7 +65,7 @@ GET /api/aggregation?ip=1.1.1.1&category=Sports&sortBy=CreatedAt&descending=true
   "data": {
     "Weather": {
       "temperature": 18.5,
-      "description": "Clear sky",
+  "description": "Clear sky",
       "humidity": 65,
       "pressure": 1013
     },
@@ -73,9 +73,9 @@ GET /api/aggregation?ip=1.1.1.1&category=Sports&sortBy=CreatedAt&descending=true
       "aqi": 2,
       "co": 201.94,
       "no2": 0.45,
-      "o3": 68.66,
+    "o3": 68.66,
       "pm2_5": 0.5,
-      "pm10": 0.59
+  "pm10": 0.59
     }
   }
 }
@@ -84,6 +84,68 @@ GET /api/aggregation?ip=1.1.1.1&category=Sports&sortBy=CreatedAt&descending=true
 **Error Responses:**
 - `400 Bad Request` - Invalid IP address or unable to determine IP
 - `500 Internal Server Error` - External API failure or server error
+
+---
+
+### Get API Statistics
+Retrieves performance statistics for all external API calls, including total requests, average response times, and performance distribution.
+
+**Endpoint:** `GET /api/statistics`
+
+**Query Parameters:** None
+
+**Example Requests:**
+```bash
+# Get current statistics
+GET /api/statistics
+```
+
+**Response Format (200 OK):**
+```json
+{
+  "statistics": [
+    {
+      "apiName": "IpStack",
+      "totalRequests": 150,
+      "averageResponseTime": 245.5,
+      "performanceBuckets": {
+        "fast": 30,
+    "average": 80,
+        "slow": 40
+}
+    },
+    {
+  "apiName": "Weather",
+      "totalRequests": 150,
+    "averageResponseTime": 180.2,
+      "performanceBuckets": {
+        "fast": 50,
+ "average": 70,
+    "slow": 30
+      }
+    },
+    {
+      "apiName": "AirQuality",
+      "totalRequests": 120,
+   "averageResponseTime": 90.5,
+      "performanceBuckets": {
+        "fast": 75,
+  "average": 35,
+        "slow": 10
+      }
+    }
+  ]
+}
+```
+
+**Performance Buckets:**
+- **Fast**: Response time < 200ms
+- **Average**: Response time between 200ms - 500ms
+- **Slow**: Response time > 500ms
+
+**Notes:**
+- Statistics are tracked in-memory and reset on application restart
+- Automatically tracks all external API calls via `StatisticsTrackingHandler`
 
 ---
 
@@ -140,19 +202,7 @@ For **local development** (F5 debugging), create `appsettings.Development.json`:
 }
 ```
 
-### 3. Environment Variables (Optional)
 
-You can override settings using environment variables:
-```bash
-# Redis connection
-export REDIS_CONNECTION="localhost:6379"
-
-# API Keys
-export ExternalAPIs__IPStack__ApiKey="your_key"
-export ExternalAPIs__OpenWeatherMap__ApiKey="your_key"
-```
-
----
 
 ## Running the Application
 
@@ -297,23 +347,7 @@ docker exec -it redis redis-cli FLUSHALL
 4. Enter parameters (optional)
 5. Click "Execute"
 
-### Using cURL
-```bash
-# Basic request
-curl http://localhost:8080/api/aggregation?ip=8.8.8.8
 
-# With filters
-curl "http://localhost:8080/api/aggregation?ip=1.1.1.1&category=Sports&descending=true"
-```
-
-### Using PowerShell
-```powershell
-# Basic request
-Invoke-RestMethod -Uri "http://localhost:8080/api/aggregation?ip=8.8.8.8"
-
-# Measure response time
-Measure-Command { Invoke-RestMethod -Uri "http://localhost:8080/api/aggregation?ip=8.8.8.8" }
-```
 
 ### Performance Testing (Cache vs No Cache)
 
@@ -398,19 +432,7 @@ public interface ILocationDataProvider
 2. Check API quota limits (IPStack: 100/month, OpenWeatherMap: 1000/day)
 3. Test keys directly: `curl "https://api.ipstack.com/8.8.8.8?access_key=YOUR_KEY"`
 
-### Port Conflicts
 
-**Symptom**: `Address already in use` when starting containers
-
-**Solutions:**
-```bash
-# Find process using port
-netstat -ano | findstr :8080
-
-# Change port in docker-compose.yml
-ports:
-  - "8090:8080"  # Changed from 8080 to 8090
-```
 
 ### Docker Build Issues
 
