@@ -434,21 +434,7 @@ public interface ILocationDataProvider
 
 
 
-### Docker Build Issues
 
-**Symptom**: Build fails or takes too long
-
-**Solutions:**
-```bash
-# Clean Docker cache
-docker builder prune
-
-# Rebuild without cache
-docker-compose build --no-cache
-
-# Check Docker resources (memory, CPU)
-docker system df
-```
 
 ---
 
