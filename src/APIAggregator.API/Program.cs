@@ -1,21 +1,19 @@
 ﻿using APIAggregator.API.Features.Aggregation;
-using APIAggregator.API.Middleware;
-using Microsoft.OpenApi.Models;
-using APIAggregator.API.Infrastructure.Http;
-using APIAggregator.API.Features.IpGeolocation;
-using APIAggregator.API.Features.Weather;
 using APIAggregator.API.Features.AirQuality;
-using APIAggregator.API.Interfaces;
-using Microsoft.Extensions.Options;
+using APIAggregator.API.Features.IpGeolocation;
 using APIAggregator.API.Features.Statistics;
+using APIAggregator.API.Features.Weather;
+using APIAggregator.API.Infrastructure.Caching;
+using APIAggregator.API.Infrastructure.Http;
+using APIAggregator.API.Interfaces;
+using APIAggregator.API.Middleware;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var redisConnection = builder.Configuration.GetConnectionString("Redis")
 	?? throw new InvalidOperationException("Redis connection string is not configured.");
-
-// TODO: for debugging.. to be deleted.
-Console.WriteLine($"===== REDIS CONNECTION STRING: {redisConnection} =====");
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -62,8 +60,10 @@ builder.Services.AddTransient<ILocationDataProvider>(sp => sp.GetRequiredService
 // STATISTICS TRACKING : singleton service to keep metrics in memory
 builder.Services.AddSingleton<IStatisticsService, StatisticsService>();
 
-// Register aggregation service
+// Register aggregation service with caching decorator using Scrutor
+builder.Services.AddScoped<IDistributedCacheService, DistributedCacheService>();
 builder.Services.AddScoped<IAggregationService, AggregationService>();
+builder.Services.Decorate<IAggregationService, CachedAggregationService>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
