@@ -5,9 +5,9 @@ using APIAggregator.API.Features.Statistics;
 using APIAggregator.API.Features.Weather;
 using APIAggregator.API.Infrastructure.Caching;
 using APIAggregator.API.Infrastructure.Http;
+using APIAggregator.API.Infrastructure.Services;
 using APIAggregator.API.Interfaces;
 using APIAggregator.API.Middleware;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +26,10 @@ builder.Logging.AddFilter("Microsoft.Extensions.Caching", LogLevel.Debug);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Client IP detection
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IClientIpAddressProvider, ClientIpAddressProvider>();
 
 builder.Services.AddOptions<WeatherApiOptions>()
 	.Configure(options =>
